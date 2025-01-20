@@ -1105,7 +1105,8 @@ const postEventToSupabase = async (context = "") =>
       body: JSON.stringify(data),
     });
 
-    if (!response.ok) throw new Error("Failed to log action to Supabase analytics.");
+    // if (!response.ok) throw new Error("Failed to log action to Supabase analytics.");
+    if (!response.ok) console.error(response);
   });
 
 function highlightDivTasks(targetInputDiv, isFocus = false) {
