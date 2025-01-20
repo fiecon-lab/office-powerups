@@ -481,6 +481,10 @@ const showTab = async (tabIndex) =>
 
     // Show the selected tab
     document.getElementById(tabs[tabIndex - 1]).classList.add("active");
+
+    if (tabIndex === 2) {
+      showFeedbackPopup();
+    }
   });
 
 const goToSheet = async (index) =>
