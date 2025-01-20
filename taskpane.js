@@ -211,6 +211,8 @@ Office.onReady(async (info) => {
   autosaveToggle.checked = true;
   handleAutosaveToggleChange(autosaveToggle, true);
 
+  window.clarity("set", "user", getInitials());
+
   console.log("Ready");
 });
 
@@ -1032,6 +1034,8 @@ const setAutosaveEnabled = async (enabled) =>
       console.log(window.sharedState.capturedRanges);
       await updateCardContainer();
     }
+
+    window.clarity("set", "auto-save", enabled);
   });
 
 function setSideBtnState(entryId, newState, buttonObj, forceUpdate = false) {
