@@ -654,3 +654,15 @@ input[type="color"]::-webkit-color-swatch {
     border: none;
     border-radius: 50%;
 }
+
+/* Task highlighting (between '[]' brackets) in entry description */
+.task-highlight {
+    background-color: #DF4326;
+    color: white;
+    padding: 0px 4px;
+    margin: 0 2px;
+    border-radius: 4px;
+    display: inline-block;
+    box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+    /* vertical-align: middle; */
+}

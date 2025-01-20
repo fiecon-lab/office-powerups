@@ -364,6 +364,8 @@ const updateCardContainer = async (focus_first = false) =>
           window.sharedState.capturedRanges[window.sharedState.capturedRanges.length - 1 - index].description =
             this.textContent;
           window.sharedState.autoSave.handleInput(data.id, this.textContent, updateStatusIndicator);
+
+          highlightDivTasks(this, true);
         });
         cardInput.addEventListener("keydown", function (e) {
           if (e.key === "Enter" && !e.shiftKey) {
@@ -386,18 +388,26 @@ const updateCardContainer = async (focus_first = false) =>
             // }
           }
         });
+        highlightDivTasks(cardInput);
+
         // focus on the first input if focus_first selected
         if (focus_first && index === 0) {
           setTimeout(() => {
             cardInput.focus();
-            window.getSelection().selectAllChildren(cardInput);
+
+            // window.getSelection().selectAllChildren(cardInput);
+            selectTextAfterTask(cardInput); // select everything after task
           }, 0);
         }
 
         // Create card footer
         const cardFooter = document.createElement("div");
         cardFooter.className = "card-footer";
-        cardFooter.innerHTML = `<p style="font-size:0.75rem">Use <span class="key-btn-text">shift+return</span> for a new line</p>`;
+
+        // new lines currently broken because of task highlighting
+        // cardFooter.innerHTML = `<p style="font-size:0.75rem">Use <span class="key-btn-text">shift+return</span> for a new line</p>`;
+        cardFooter.innerHTML = `<p style="font-size:0.75rem">Use <span class="key-btn-text">[square brackets]</span> to define task</p>`;
+
         cardFooter.style.display = "none"; // Initially hidden
         // Add event listeners to show/hide cardFooter based on cardInput focus
         cardInput.addEventListener("focus", function () {
@@ -1097,3 +1107,92 @@ const postEventToSupabase = async (context = "") =>
 
     if (!response.ok) throw new Error("Failed to log action to Supabase analytics.");
   });
+
+function highlightDivTasks(targetInputDiv, isFocus = false) {
+  let cursorPosition;
+  const selection = window.getSelection();
+
+  if (isFocus) {
+    // Save cursor position in plain text
+    const range = selection.getRangeAt(0);
+    const preSelectionRange = range.cloneRange();
+    preSelectionRange.selectNodeContents(targetInputDiv);
+    preSelectionRange.setEnd(range.startContainer, range.startOffset);
+
+    cursorPosition = preSelectionRange.toString().length;
+  }
+
+  // Get text and replace matches with highlighted spans
+  // Taking inner text and using to assign html is breaking new lines
+  const text = targetInputDiv.innerText;
+  targetInputDiv.innerHTML = text.replace(/\[([^\]]*)\]/g, (match) => `<span class="task-highlight">${match}</span>`);
+
+  // Using HTML to preserve newlines etc (doesn't work very well!) -----------------------------------------------------------
+  // Get HTML and replace matches with highlighted spans, but only if not already highlighted
+  // const html = targetInputDiv.innerHTML;
+  // targetInputDiv.innerHTML = html.replace(/(\[([^\]]*)\])(?![^<]*<\/span>)/g, '<span class="task-highlight">$1</span>');
+  // -------------------------------------------------------------------------------------------------------------------------
+
+  if (isFocus) {
+    // // Restore cursor by walking through text nodes
+    let currentPosition = 0;
+    const nodeStack = [targetInputDiv];
+
+    while (nodeStack.length) {
+      const node = nodeStack.pop();
+      if (node.nodeType === Node.TEXT_NODE) {
+        const nextPosition = currentPosition + node.length;
+        if (currentPosition <= cursorPosition && cursorPosition <= nextPosition) {
+          const newRange = document.createRange();
+          newRange.setStart(node, cursorPosition - currentPosition);
+          selection.removeAllRanges();
+          selection.addRange(newRange);
+          break;
+        }
+        currentPosition = nextPosition;
+      } else {
+        const children = Array.from(node.childNodes);
+        nodeStack.push(...children.reverse());
+      }
+    }
+  }
+}
+
+function selectTextAfterTask(cardInput) {
+  const range = document.createRange();
+  const selection = window.getSelection();
+
+  // Function to find the last closing bracket, even inside spans
+  function findLastClosingBracket(element) {
+    const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+    let lastNode = null;
+    let lastIndex = -1;
+
+    while (walker.nextNode()) {
+      const nodeText = walker.currentNode.textContent;
+      const index = nodeText.lastIndexOf("]");
+      if (
+        index > -1 &&
+        (lastIndex === -1 || walker.currentNode.compareDocumentPosition(lastNode) & Node.DOCUMENT_POSITION_FOLLOWING)
+      ) {
+        lastNode = walker.currentNode;
+        lastIndex = index;
+      }
+    }
+
+    return { node: lastNode, index: lastIndex };
+  }
+
+  const { node, index } = findLastClosingBracket(cardInput);
+
+  if (node) {
+    range.setStart(node, index + 1);
+    range.setEnd(cardInput, cardInput.childNodes.length);
+  } else {
+    // If no closing bracket is found, select all text
+    range.selectNodeContents(cardInput);
+  }
+
+  selection.removeAllRanges();
+  selection.addRange(range);
+}
