@@ -473,6 +473,7 @@ flex-direction: column;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap:10px;
     opacity: 1;
     transition: opacity 0.5s ease-out;
   }
@@ -492,6 +493,24 @@ flex-direction: column;
   .popup.error-popup {
     background-color: #ed5f5f;
   }
+
+
+.popup-button {
+    background-color: rgba(255, 255, 255, 0.3) !important;
+    border: 1px solid white !important;
+    border-radius: 15px !important;
+    font-size: 1rem !important;
+    /* padding:0 !important; */
+    padding:5px;
+    margin:auto;
+    width:50%;
+    max-width:150px;
+}
+
+.popup-button:hover {
+    background-color: rgba(255, 255, 255, 0.6) !important;
+    font-weight: bold;
+}
 
 /* Hotkey input */
 

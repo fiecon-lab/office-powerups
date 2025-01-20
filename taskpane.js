@@ -216,7 +216,7 @@ Office.onReady(async (info) => {
 
 // CHANGE LOGGER
 
-const captureAddress = async (context = undefined) => {
+const captureAddress = async (callContext = undefined) => {
   // note can probably remove assignment on line below
   let [, error] = await tryCatch(async () => {
     const rangeLimit = window.sharedState.autoSave.enabled ? 20 : 5;
@@ -266,9 +266,13 @@ const captureAddress = async (context = undefined) => {
         autoSave.handleInput(id, description, updateStatusIndicator);
       }
 
+      if (Math.random() < 0.02) {
+        showFeedbackPopup();
+      }
+
       // log a new entry to clarity
       window.clarity("event", "captureAddress");
-      postEventToSupabase(context === "fromShortcut" ? context : "");
+      postEventToSupabase(callContext === "fromShortcut" ? context : "");
     });
   });
 };
@@ -468,7 +472,7 @@ const deleteAllCards = async () =>
 
 const showTab = async (tabIndex) =>
   tryCatch(async () => {
-    const tabs = ["home-tab", "address-clipper", "suggestions-tab"];
+    const tabs = ["home-tab", "address-clipper", "suggestions-tab", "feedback-tab"];
 
     // Hide all tabs
     tabs.forEach((id) => {
@@ -535,6 +539,46 @@ function showPopup(message, isError = true) {
   });
 
   popup.appendChild(messageElement);
+  popup.appendChild(closeButton);
+
+  const container = document.querySelector(".popup-container");
+  container.prepend(popup);
+
+  setTimeout(() => {
+    popup.classList.add("fade-out");
+    setTimeout(() => {
+      popup.remove();
+    }, 500);
+  }, 5000);
+}
+
+function showFeedbackPopup() {
+  const popup = document.createElement("div");
+  popup.classList.add("popup");
+  const die = () => {
+    popup.classList.add("fade-out");
+    setTimeout(() => {
+      popup.remove();
+    });
+  };
+
+  const messageElement = document.createElement("span");
+  messageElement.textContent = "Finding this tool useful?";
+
+  const feedbackButton = document.createElement("button");
+  feedbackButton.classList.add("popup-button");
+  feedbackButton.textContent = "Leave some feedback!😍";
+  feedbackButton.addEventListener("click", () => {
+    showTab(4);
+    die();
+  });
+
+  const closeButton = document.createElement("button");
+  closeButton.innerHTML = "&times;"; // Unicode character for "X"
+  closeButton.addEventListener("click", die, 500);
+
+  popup.appendChild(messageElement);
+  popup.appendChild(feedbackButton);
   popup.appendChild(closeButton);
 
   const container = document.querySelector(".popup-container");
