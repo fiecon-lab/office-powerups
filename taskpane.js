@@ -221,11 +221,12 @@ Office.onReady(async (info) => {
 const captureAddress = async (callContext = undefined) => {
   // note can probably remove assignment on line below
   let [, error] = await tryCatch(async () => {
-    const rangeLimit = window.sharedState.autoSave.enabled ? 20 : 5;
+    const autosave = window.sharedState.autoSave.enabled;
+    const rangeLimit = autosave ? 20 : 5;
 
     if (window.sharedState.capturedRanges.length >= rangeLimit) {
       throw Error(
-        "Unable to save more than 5 addresses at once. Unload the current addresses to the change log before continuing."
+        `Range limit reached (${rangeLimit} with autosave ${autosave ? "enabled" : "disabled"}). Click "Clear All" to continue.`
       );
     }
 
@@ -446,6 +447,10 @@ const deleteCard = async (index) =>
     // Remove the card at the specified index from the capturedRanges array and assign it to a variable
     const data = window.sharedState.capturedRanges.splice(index, 1)[0];
     window.sharedState.autoSave.clearFromQueue(data.id);
+
+    if (window.sharedState.autoSave.enabled)
+      showPopup(`Captured range removed. No change log entries were deleted.`, false);
+
     // Update the card container to reflect the changes in the capturedRanges array
     updateCardContainer();
   });
@@ -476,6 +481,10 @@ const deleteAllCards = async () =>
   tryCatch(async () => {
     window.sharedState.capturedRanges = [];
     window.sharedState.autoSave.clearQueue();
+    showPopup(
+      `Cleared all captured ranges.${window.sharedState.autoSave.enabled ? " No change log entries were deleted." : ""}`,
+      false
+    );
     updateCardContainer();
   });
 
