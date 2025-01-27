@@ -249,15 +249,16 @@ p {
 
 .warning-bar {
     background-color:rgb(255, 244, 212);
-    padding:0.5rem;
-    font-size:0.9rem;
+    padding:0.3rem 0.5rem 0.3rem 0.5rem;
+    font-size:0.75rem;
 }
 
 
 #no-addresses-message {
     color: rgb(188, 188, 188);
     justify-content: center;
-    margin-top:30px;
+    margin:30px;
+    text-align: center;
 }
 
 .card-container {
