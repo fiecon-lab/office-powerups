@@ -366,7 +366,7 @@ const updateCardContainer = async (focus_first = false) =>
     cardContainer.innerHTML = ""; // Clear existing cards
 
     if (window.sharedState.capturedRanges.length == 0) {
-      cardContainer.innerHTML = `<p id="no-addresses-message">Click "Capture Address" to get started.</p>`;
+      cardContainer.innerHTML = `<p id="no-addresses-message">Click "Capture Range" to get started.</p>`;
       return;
     }
 
