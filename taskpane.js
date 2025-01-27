@@ -268,13 +268,20 @@ const captureAddress = async (callContext = undefined) => {
         autoSave.handleInput(id, description, updateStatusIndicator);
       }
 
-      if (Math.random() < 0.02) {
+      if (callContext?.fillTarget) {
+        // Apply fill!
+        // showPopup(await rangeHasFill(range, context.sync));
+        await applyFillColourIfEmpty(range, context.sync);
+      }
+
+      // Ask for feedback after every 100 clicks
+      if (Math.random() < 0.01) {
         showFeedbackPopup();
       }
 
       // log a new entry to clarity
       window.clarity("event", "captureAddress");
-      postEventToSupabase(callContext === "fromShortcut" ? context : "");
+      postEventToSupabase(callContext?.fromShortcut ? "SHORTCUT" : "");
     });
   });
 };
@@ -661,7 +668,7 @@ Office.actions.associate("ShowTaskpane", () => {
     .showAsTaskpane()
     .then(async () => {
       showTab(2);
-      captureAddress("fromShortcut");
+      captureAddress({ fromShortcut: true });
       return;
     })
     .catch((error) => {
@@ -1249,3 +1256,57 @@ function selectTextAfterTask(cardInput) {
   selection.removeAllRanges();
   selection.addRange(range);
 }
+
+const toggleCaptureDropdown = async () =>
+  tryCatch(async () => {
+    document.getElementById("captureDropdown").classList.toggle("dropdown-show");
+  });
+
+// Close the dropdown if the user clicks outside of it
+window.onclick = function (event) {
+  // Check if click target is the button or its children
+  const dropdownButton = document.querySelector(".dropdown-btn");
+  if (!dropdownButton.contains(event.target)) {
+    var dropdowns = document.getElementsByClassName("dropdown-content");
+    for (var i = 0; i < dropdowns.length; i++) {
+      var openDropdown = dropdowns[i];
+      if (openDropdown.classList.contains("dropdown-show")) {
+        openDropdown.classList.remove("dropdown-show");
+      }
+    }
+  }
+};
+
+const applyFillColourIfEmpty = async (range, sync) => {
+  console.log("A");
+  range.load(["rowCount", "columnCount"]);
+  await sync();
+  console.log("B");
+
+  for (let row = 0; row < range.rowCount; row++) {
+    for (let col = 0; col < range.columnCount; col++) {
+      console.log("C");
+      const cell = range.getCell(row, col);
+      cell.load("format/fill/color");
+      console.log("D");
+
+      await sync();
+
+      const fillColor = cell.format.fill.color;
+      console.log("E");
+      if (fillColor !== "#FFFFFF") {
+        throw new Error("Cannot apply fill colour to a range which already has a fill colour.");
+      }
+    }
+  }
+
+  console.log("F");
+
+  // Doesn't have fill!
+
+  // assign colour to range
+  let [result, error] = await getFromLocalStorage("pwrups_fill_col");
+
+  console.log(result, error);
+  if (!error) range.format.fill.color = result;
+};

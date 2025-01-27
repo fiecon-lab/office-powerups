@@ -60,25 +60,25 @@
       <div class="app-grid">
         <!-- Add or remove 'interactive' class on individual app-items to toggle hover effects -->
 
-        
+
         <div class="app-item interactive">
           <!-- <img src="./assets/idea_icon.png" alt="Suggestions" class="app-icon"> -->
           <div class="app-icon interactive light" onclick="showTab(4)" style="background-color: lightcyan;">😍</div>
           <span class="app-label">Feedback</span>
         </div>
-        
+
         <div class="app-item interactive">
           <img src="./assets/ac_icon_generic_3.png" alt="Change Logger" class="app-icon ac-icon" onclick="showTab(2);">
           <!-- <div class="app-icon"></div> -->
           <span class="app-label">Change Logger</span>
         </div>
-        
+
         <div class="app-item interactive">
           <img src="./assets/cria_large.png" alt="Ask Cria" class="app-icon light" onclick="openCria()">
           <!-- <div class="app-icon"></div> -->
           <span class="app-label">Ask Cria</span>
         </div>
-        
+
         <div class="app-item interactive">
           <!-- <img src="./assets/idea_icon.png" alt="Suggestions" class="app-icon"> -->
           <div class="app-icon interactive light" onclick="showTab(3);">+</div>
@@ -118,17 +118,26 @@
     </div>
 
     <div class="button-pane">
-      <div class="button-container dropdown" style="padding:0; gap:0; overflow: hidden">
-        <img class="button-image clickable dropdown" src="./assets/ac_icon_0.png" alt="Button Image"
-          style="border-radius: 0px;" onclick="captureAddress()"/>
-        <div class="button-label clickable dropdown" style="width:100%; font-size:0.9rem" onclick="showPopup('🛈 Coming soon: add custom non-range entries, for instance VBA edits. For now, click the main button icon to capture a range.', false)" >
-          <div>Capture<br>Address</div>
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 12" stroke="black" fill="none" stroke-width="1"
-            stroke-linecap="round" stroke-linejoin="round" style="height:15px;margin-top:2px">
-            <path d="M3 5l3 2.5 3-2.5" />
-          </svg>
+      <div>
+        <div class="button-container outlined" style="padding:0; gap:0; overflow: hidden">
+          <img class="button-image clickable outlined" src="./assets/ac_icon_0.png" alt="Button Image"
+            style="border-radius: 0px;" onclick="captureAddress()" />
+          <div class="button-label clickable outlined dropdown-btn" style="width:100%; font-size:0.9rem"
+            onclick="toggleCaptureDropdown()">
+            <div>Capture<br>Range</div>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 12" stroke="#555" fill="none" stroke-width="1"
+              stroke-linecap="round" stroke-linejoin="round" style="height:15px;margin-top:2px">
+              <path d="M3 5l3 2.5 3-2.5" />
+            </svg>
+          </div>
+        </div>
+        <div id="captureDropdown" class="dropdown-content">
+          <a href="#" onclick="captureAddress()">Capture range</a>
+          <a href="#" onclick="captureAddress({fillTarget:true})">Capture and fill</a>
+          <a href="#" onclick="showPopup('🛈 Coming soon: add custom non-range entries, for instance VBA edits. For now, click the main button icon to capture a range.', false)">Capture custom</a>
         </div>
       </div>
+
 
       <div class="divider"></div>
 
@@ -155,11 +164,13 @@
         <div class="button-container small horizontal">
           <img class="button-image small" src="./assets/icon_user_svg.svg" alt="Button Image" />
           <input id="initialsInput" class="pane-input" type="text" placeholder="Initials"
-          onkeydown="if(event.key === 'Enter') this.blur();" />
+            onkeydown="if(event.key === 'Enter') this.blur();" />
         </div>
         <div class="button-container small horizontal">
-          <div class="button-image small clickable dropdown" onclick="this.children[0].click()"><input id="fill-colour-input" type="color" value="#ff0000"></div>
-          <img class="button-image small clickable dropdown" src="./assets/icon_sample_svg.svg" alt="Button Image" onclick="sampleFillColour();"/>
+          <div class="button-image small clickable outlined" onclick="this.children[0].click()"><input
+              id="fill-colour-input" type="color" value="#ff0000"></div>
+          <img class="button-image small clickable outlined" src="./assets/icon_sample_svg.svg" alt="Button Image"
+            onclick="sampleFillColour();" />
           <div class="button-label">Fill colour</div>
         </div>
       </div>
@@ -203,15 +214,18 @@
       </button>
       <h3>Feedback</h3>
     </div>
-    
-    <iframe width="100%" height="100%" src="https://forms.office.com/Pages/ResponsePage.aspx?id=q01AaPwxQ0KzWirHt_j_fqgGlatsftxEvX4eTljsr_dURUlEVzBTVFcxNkJVUE41VjIzNkczU0M4Sy4u&embed=true" frameborder="0" marginwidth="0" marginheight="0" style="border: none; max-width:100%; max-height:100vh" allowfullscreen webkitallowfullscreen mozallowfullscreen msallowfullscreen> </iframe>
+
+    <iframe width="100%" height="100%"
+      src="https://forms.office.com/Pages/ResponsePage.aspx?id=q01AaPwxQ0KzWirHt_j_fqgGlatsftxEvX4eTljsr_dURUlEVzBTVFcxNkJVUE41VjIzNkczU0M4Sy4u&embed=true"
+      frameborder="0" marginwidth="0" marginheight="0" style="border: none; max-width:100%; max-height:100vh"
+      allowfullscreen webkitallowfullscreen mozallowfullscreen msallowfullscreen> </iframe>
 
   </div>
 
 
 
 
-  
+
   <div class="popup-container"></div>
 
 
