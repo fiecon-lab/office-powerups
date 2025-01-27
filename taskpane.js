@@ -282,6 +282,7 @@ const captureAddress = async (callContext = undefined) => {
 
       // log a new entry to clarity
       window.clarity("event", "captureAddress");
+      if (callContext?.fromShortcut) window.clarity("event", "powerup-hotkey");
       postEventToSupabase(callContext?.fromShortcut ? "SHORTCUT" : "");
     });
   });
