@@ -64,7 +64,7 @@ p {
 }
 
 .clickable:active {
-    background-color: #d0d0d0;
+    background-color: #d0d0d0 !important;
 }
 
 
@@ -112,6 +112,8 @@ p {
 }
 
 
+
+
 /* Dropdown functionality */
 
 
@@ -153,7 +155,14 @@ p {
 }
 
 
+#capture-btn-container.parent-dropdown-active {
+    outline: solid lightgray 1px;
+}
 
+#dropdown-btn.parent-dropdown-active {
+    outline: solid lightgray 1px;
+    background-color: #eeeeee;
+}
 
 
 

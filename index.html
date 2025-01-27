@@ -7,7 +7,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="version" content="0.1.3e" />
+  <meta name="last-updated" content="27/01/2025 at 16:35" />
+
   <title>FIECON Powertools Add-in</title>
 
   <!-- Office JavaScript API -->
@@ -105,9 +108,13 @@
     </div>
 
     <div class="app-footer">
-      <p>Powerups v0.1.3d</p>
-      <p>Last updated 27/01/25 at 14:24</p>
+      <p id="version-display"></p>
+      <p id="updated-display"></p>
     </div>
+    <script>
+      document.getElementById('version-display').innerText = `Powerups v${document.querySelector('meta[name="version"]').content}`;
+      document.getElementById('updated-display').innerText = `Last updated ${document.querySelector('meta[name="last-updated"]').content}`;
+    </script>
   </div>
 
 
@@ -124,10 +131,10 @@
 
     <div class="button-pane">
       <div>
-        <div class="button-container outlined" style="padding:0; gap:0; overflow: hidden">
+        <div id="capture-btn-container" class="button-container outlined" style="padding:0; gap:0; overflow: hidden">
           <img class="button-image clickable outlined" src="./assets/ac_icon_0.png" alt="Button Image"
             style="border-radius: 0px;" onclick="captureAddress()" />
-          <div class="button-label clickable outlined dropdown-btn" style="width:100%; font-size:0.9rem"
+          <div id="dropdown-btn" class="button-label clickable outlined" style="width:100%; font-size:0.9rem"
             onclick="toggleCaptureDropdown()">
             <div>Capture<br>Range</div>
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 12" stroke="#555" fill="none" stroke-width="1"
@@ -206,8 +213,8 @@
       <h3>Suggestions</h3>
     </div>
 
-    <iframe src="https://poll.ly/BcxFsbkwL0QoLWgr0mRH"
-      style="width: 100%; height: 100%; border: none;zoom:80%;"></iframe>
+    <!-- <iframe src="https://poll.ly/BcxFsbkwL0QoLWgr0mRH"
+      style="width: 100%; height: 100%; border: none;zoom:80%;"></iframe> -->
 
   </div>
 
@@ -222,10 +229,10 @@
       <h3>Feedback</h3>
     </div>
 
-    <iframe width="100%" height="100%"
+    <!-- <iframe width="100%" height="100%"
       src="https://forms.office.com/Pages/ResponsePage.aspx?id=q01AaPwxQ0KzWirHt_j_fqgGlatsftxEvX4eTljsr_dURUlEVzBTVFcxNkJVUE41VjIzNkczU0M4Sy4u&embed=true"
       frameborder="0" marginwidth="0" marginheight="0" style="border: none; max-width:100%; max-height:100vh"
-      allowfullscreen webkitallowfullscreen mozallowfullscreen msallowfullscreen> </iframe>
+      allowfullscreen webkitallowfullscreen mozallowfullscreen msallowfullscreen> </iframe> -->
 
   </div>
 

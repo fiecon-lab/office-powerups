@@ -71,8 +71,68 @@ class AutoSave {
   }
 }
 
+const handleAutosaveToggleChange = async (checkbox, ignoreErr = false) =>
+  tryCatch(async () => {
+    await Excel.run(async (context) => {
+      if (checkbox.checked) {
+        // Simulate validation logic
+        const hasLog = await changeLogExists(context);
+        const hasInitials = document.getElementById("initialsInput").value.length > 0;
+
+        if (!hasLog) {
+          // revert the checkbox
+          checkbox.checked = false;
+          throw new Error("Auto-save not enabled. No 'Change log' sheet exists.");
+        }
+
+        if (!hasInitials) {
+          // revert the checkbox
+          checkbox.checked = false;
+          throw new Error("Auto-save not enabled. Initials cannot be blank.");
+        }
+
+        // success!
+        setAutosaveEnabled(true);
+        return;
+      }
+      setAutosaveEnabled(false);
+    });
+  }, !ignoreErr);
+
+const setAutosaveEnabled = async (enabled) =>
+  tryCatch(async () => {
+    let autoSave = window.sharedState.autoSave;
+
+    // exit if no change
+    if (enabled === autoSave.enabled) return;
+    // enable auto-save!
+    autoSave.enabled = enabled;
+
+    if (enabled) {
+      // ENABLE
+      // Immediately push all existing to change log
+      showPopup(
+        "🛈 Auto-save enabled, syncing to Change Log. Deleting cards from this pane will not delete change log entries.",
+        false
+      );
+      window.sharedState.capturedRanges.forEach((range) => {
+        autoSave.handleInput(range.id, range.description, updateStatusIndicator);
+      });
+    } else {
+      // DISABLE
+      autoSave.clearQueue();
+      window.sharedState.capturedRanges.forEach((range) => {
+        range.state = "arrow";
+      });
+      console.log(window.sharedState.capturedRanges);
+      await updateCardContainer();
+    }
+
+    window.clarity("set", "auto-save", enabled);
+  });
+
 const writeDescriptionUpdate = async (inputId, newVal) => {
-  console.log("Executing save");
+  console.log("Executing save"); 
 
   // called at completion of auto-save
   // overwite only the description
@@ -995,66 +1055,6 @@ const updateStatusIndicator = async (entryId, status) =>
     // }
   });
 
-const handleAutosaveToggleChange = async (checkbox, ignoreErr = false) =>
-  tryCatch(async () => {
-    await Excel.run(async (context) => {
-      if (checkbox.checked) {
-        // Simulate validation logic
-        const hasLog = await changeLogExists(context);
-        const hasInitials = document.getElementById("initialsInput").value.length > 0;
-
-        if (!hasLog) {
-          // revert the checkbox
-          checkbox.checked = false;
-          throw new Error("Auto-save not enabled. No 'Change log' sheet exists.");
-        }
-
-        if (!hasInitials) {
-          // revert the checkbox
-          checkbox.checked = false;
-          throw new Error("Auto-save not enabled. Initials cannot be blank.");
-        }
-
-        // success!
-        setAutosaveEnabled(true);
-        return;
-      }
-      setAutosaveEnabled(false);
-    });
-  }, !ignoreErr);
-
-const setAutosaveEnabled = async (enabled) =>
-  tryCatch(async () => {
-    let autoSave = window.sharedState.autoSave;
-
-    // exit if no change
-    if (enabled === autoSave.enabled) return;
-    // enable auto-save!
-    autoSave.enabled = enabled;
-
-    if (enabled) {
-      // ENABLE
-      // Immediately push all existing to change log
-      showPopup(
-        "🛈 Auto-save enabled, syncing to Change Log. Deleting cards from this pane will not delete change log entries.",
-        false
-      );
-      window.sharedState.capturedRanges.forEach((range) => {
-        autoSave.handleInput(range.id, range.description, updateStatusIndicator);
-      });
-    } else {
-      // DISABLE
-      autoSave.clearQueue();
-      window.sharedState.capturedRanges.forEach((range) => {
-        range.state = "arrow";
-      });
-      console.log(window.sharedState.capturedRanges);
-      await updateCardContainer();
-    }
-
-    window.clarity("set", "auto-save", enabled);
-  });
-
 function setSideBtnState(entryId, newState, buttonObj, forceUpdate = false) {
   // do nothing if no state change
   if (!forceUpdate && getCardState(entryId) === newState) {
@@ -1269,14 +1269,16 @@ function selectTextAfterTask(cardInput) {
 
 const toggleCaptureDropdown = async () =>
   tryCatch(async () => {
-    document.getElementById("captureDropdown").classList.toggle("dropdown-show");
+    document.getElementById("captureDropdown")?.classList.toggle("dropdown-show");
+    document.getElementById("capture-btn-container")?.classList.toggle("parent-dropdown-active");
+    document.getElementById("dropdown-btn")?.classList.toggle("parent-dropdown-active");
   });
 
 // Close the dropdown if the user clicks outside of it
 window.onclick = function (event) {
   // Check if click target is the button or its children
-  const dropdownButton = document.querySelector(".dropdown-btn");
-  if (!dropdownButton.contains(event.target)) {
+  const dropdownButton = document.querySelector("#dropdown-btn");
+  if (!dropdownButton?.contains(event.target)) {
     var dropdowns = document.getElementsByClassName("dropdown-content");
     for (var i = 0; i < dropdowns.length; i++) {
       var openDropdown = dropdowns[i];
@@ -1284,6 +1286,8 @@ window.onclick = function (event) {
         openDropdown.classList.remove("dropdown-show");
       }
     }
+    document.getElementById("capture-btn-container")?.classList.remove("parent-dropdown-active");
+    document.getElementById("dropdown-btn")?.classList.remove("parent-dropdown-active");
   }
 };
 
