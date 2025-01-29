@@ -883,6 +883,11 @@ const pushEntryToChangeLog = async (entryId, initials, data, pushIsUpdate = fals
     });
   });
 
+function isTodo(data) {
+  // data of form: [[null, null, null, null]]
+  return data[0].some((item) => typeof item === "string" && item.toLowerCase().includes("todo"));
+}
+
 async function insertDataAtCell(context, anchorRange, data, overwrite = false) {
   let rows = data.length;
   let cols = Math.max(...data.map((row) => row.length));
@@ -914,6 +919,11 @@ async function insertDataAtCell(context, anchorRange, data, overwrite = false) {
     }
 
     await context.sync();
+
+    if (isTodo(data)) {
+      targetRange.getResizedRange(0, 1).format.fill.color = "#FFFF00";
+      await context.sync();
+    }
 
     console.log("Data inserted successfully.");
     return targetRange;
