@@ -132,7 +132,7 @@ const setAutosaveEnabled = async (enabled) =>
   });
 
 const writeDescriptionUpdate = async (inputId, newVal) => {
-  console.log("Executing save"); 
+  console.log("Executing save");
 
   // called at completion of auto-save
   // overwite only the description
@@ -332,7 +332,7 @@ const captureAddress = async (callContext = undefined) => {
       if (callContext?.fillTarget) {
         // Apply fill!
         // showPopup(await rangeHasFill(range, context.sync));
-        await applyFillColourIfEmpty(range, context.sync);
+        await applyFillColourIfEmpty(range, context);
       }
 
       // Ask for feedback after every 100 clicks
@@ -601,9 +601,19 @@ const goToAddress = async (index) =>
     });
   });
 
-function showPopup(message, isError = true) {
+function showPopup(message, isError = true, buttonMessage = undefined, buttonCallback = undefined, onDie = undefined) {
+  const useButton = typeof buttonMessage === "string" && typeof buttonCallback === "function";
+
   const popup = document.createElement("div");
   popup.classList.add("popup");
+  const die = () => {
+    popup.classList.add("fade-out");
+    popup.disabled = true;
+    if (onDie) onDie();
+    setTimeout(() => {
+      popup.remove();
+    }, 500);
+  };
 
   if (isError) {
     popup.classList.add("error-popup");
@@ -611,68 +621,34 @@ function showPopup(message, isError = true) {
 
   const messageElement = document.createElement("span");
   messageElement.textContent = message;
+  popup.appendChild(messageElement);
+
+  if (useButton) {
+    const feedbackButton = document.createElement("button");
+    feedbackButton.classList.add("popup-button");
+    feedbackButton.textContent = buttonMessage;
+    feedbackButton.addEventListener("click", async () => {
+      await buttonCallback();
+      die();
+    });
+    popup.appendChild(feedbackButton);
+  }
 
   const closeButton = document.createElement("button");
   closeButton.innerHTML = "&times;"; // Unicode character for "X"
-  closeButton.addEventListener("click", () => {
-    popup.classList.add("fade-out");
-    setTimeout(() => {
-      popup.remove();
-    }, 500);
-  });
-
-  popup.appendChild(messageElement);
+  closeButton.addEventListener("click", die);
   popup.appendChild(closeButton);
 
   const container = document.querySelector(".popup-container");
   container.prepend(popup);
 
-  setTimeout(() => {
-    popup.classList.add("fade-out");
-    setTimeout(() => {
-      popup.remove();
-    }, 500);
-  }, 5000);
+  setTimeout(die, 5000);
 }
 
 function showFeedbackPopup() {
-  const popup = document.createElement("div");
-  popup.classList.add("popup");
-  const die = () => {
-    popup.classList.add("fade-out");
-    setTimeout(() => {
-      popup.remove();
-    });
-  };
-
-  const messageElement = document.createElement("span");
-  messageElement.textContent = "Finding this tool useful?";
-
-  const feedbackButton = document.createElement("button");
-  feedbackButton.classList.add("popup-button");
-  feedbackButton.textContent = "Leave some feedback!😍";
-  feedbackButton.addEventListener("click", () => {
+  showPopup("Finding this tool useful?", false, "Leave some feedback!😍", () => {
     showTab(4);
-    die();
   });
-
-  const closeButton = document.createElement("button");
-  closeButton.innerHTML = "&times;"; // Unicode character for "X"
-  closeButton.addEventListener("click", die, 500);
-
-  popup.appendChild(messageElement);
-  popup.appendChild(feedbackButton);
-  popup.appendChild(closeButton);
-
-  const container = document.querySelector(".popup-container");
-  container.prepend(popup);
-
-  setTimeout(() => {
-    popup.classList.add("fade-out");
-    setTimeout(() => {
-      popup.remove();
-    }, 500);
-  }, 5000);
 }
 
 const insertAddress = async (index) =>
@@ -1291,36 +1267,64 @@ window.onclick = function (event) {
   }
 };
 
-const applyFillColourIfEmpty = async (range, sync) => {
-  console.log("A");
-  range.load(["rowCount", "columnCount"]);
-  await sync();
-  console.log("B");
+const applyFillColourIfEmpty = async (range, context) =>
+  tryCatch(async () => {
+    range.load(["rowCount", "columnCount"]);
+    await context.sync();
 
-  for (let row = 0; row < range.rowCount; row++) {
-    for (let col = 0; col < range.columnCount; col++) {
-      console.log("C");
-      const cell = range.getCell(row, col);
-      cell.load("format/fill/color");
-      console.log("D");
+    const n_cells = range.rowCount * range.columnCount;
 
-      await sync();
+    for (let row = 0; row < range.rowCount; row++) {
+      for (let col = 0; col < range.columnCount; col++) {
+        const cell = range.getCell(row, col);
+        cell.load("format/fill/color");
 
-      const fillColor = cell.format.fill.color;
-      console.log("E");
-      if (fillColor !== "#FFFFFF") {
-        throw new Error("Cannot apply fill colour to a range which already has a fill colour.");
+        await context.sync();
+
+        const fillColor = cell.format.fill.color;
+
+        if (fillColor !== "#FFFFFF") {
+          range.track();
+          showPopup(
+            "Range already has a fill colour.",
+            true,
+            "Fill anyway",
+            async () => {
+              if (n_cells > 15) {
+                showPopup("Error: Cannot force overwrite fill colour for range with more than 15 cells.");
+                return;
+              }
+              await applyQCFill(range, context);
+            },
+            async () => {
+              range.untrack();
+              await context.sync();
+            }
+          );
+          return;
+        }
       }
     }
-  }
 
-  console.log("F");
+    // Doesn't have fill!
+    applyQCFill(range, context);
+  });
 
-  // Doesn't have fill!
+const fillSelection = async () =>
+  tryCatch(async () => {
+    await Excel.run(async (context) => {
+      // get selected range and current worksheet
+      const range = context.workbook.getSelectedRange();
 
-  // assign colour to range
-  let [result, error] = await getFromLocalStorage("pwrups_fill_col");
+      await applyFillColourIfEmpty(range, context);
+    });
+  });
 
-  console.log(result, error);
-  if (!error) range.format.fill.color = result;
-};
+const applyQCFill = async (range, context) =>
+  tryCatch(async () => {
+    // assign colour to range
+    let [result, error] = await getFromLocalStorage("pwrups_fill_col");
+    if (!error) range.format.fill.color = result;
+
+    await context.sync();
+  });
