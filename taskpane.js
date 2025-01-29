@@ -1290,8 +1290,8 @@ const applyFillColourIfEmpty = async (range, context) =>
             true,
             "Fill anyway",
             async () => {
-              if (n_cells > 15) {
-                showPopup("Error: Cannot force overwrite fill colour for range with more than 15 cells.");
+              if (n_cells > 50) {
+                showPopup("Error: Cannot force overwrite fill colour for range with more than 50 cells.");
                 return;
               }
               await applyQCFill(range, context);
