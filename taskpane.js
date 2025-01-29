@@ -112,7 +112,7 @@ const setAutosaveEnabled = async (enabled) =>
       // ENABLE
       // Immediately push all existing to change log
       showPopup(
-        "🛈 Auto-save enabled, syncing to Change Log. Deleting cards from this pane will not delete change log entries.",
+        "🛈 Auto-save enabled, syncing to Change Log.",
         false
       );
       window.sharedState.capturedRanges.forEach((range) => {
@@ -510,10 +510,54 @@ const deleteCard = async (index) =>
     window.sharedState.autoSave.clearFromQueue(data.id);
 
     if (window.sharedState.autoSave.enabled)
-      showPopup(`Captured range removed. No change log entries were deleted.`, false);
+      showPopup(`Captured range removed. Delete from Change Log too?`, false, "Delete", () => {
+        deleteEntryFromChangeLog(data.id);
+      });
 
     // Update the card container to reflect the changes in the capturedRanges array
     updateCardContainer();
+  });
+
+const deleteEntryFromChangeLog = async (entryId) =>
+  tryCatch(async () => {
+    await Excel.run(async (context) => {
+      // Find change log sheet
+
+      let changeLogSheet = await getChangeLogSheet(context);
+
+      // find used range
+      let usedRange = changeLogSheet.getUsedRangeOrNullObject();
+      usedRange.load("isNullObject");
+      await context.sync();
+
+      if (usedRange.isNullObject) {
+        // also set usedRange to newly inserted range
+        throw new Error("No change log exists.");
+      }
+
+      // search for existing entry
+      const idCol = usedRange.getColumn(0);
+      idCol.load("values");
+      await context.sync();
+
+      const values = idCol.values;
+      for (let i = 0; i < values.length; i++) {
+        if (values[i][0] === entryId) {
+          // Return the found cell as a range object
+          const foundCell = usedRange.getCell(i, 0); // Get the corresponding cell
+
+          foundCell.getEntireRow().delete(); // Delete the row
+
+          await context.sync();
+
+          showPopup("Deleted 1 entry from Change Log.", false);
+
+          return;
+        }
+      }
+
+      throw new Error("Entry not found.");
+    });
   });
 
 const insertSingleCard = async (index) =>
