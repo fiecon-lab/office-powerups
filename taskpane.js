@@ -357,6 +357,47 @@ function getDescription() {
 function getInitials() {
   return document.getElementById("initialsInput").value || "NU";
 }
+
+const goToChangeLog = async (entryId) =>
+  tryCatch(async () => {
+    await Excel.run(async (context) => {
+      // Find change log sheet
+
+      let changeLogSheet = await getChangeLogSheet(context);
+
+      // find used range
+      let usedRange = changeLogSheet.getUsedRangeOrNullObject();
+      usedRange.load("isNullObject");
+      await context.sync();
+
+      if (usedRange.isNullObject) {
+        // also set usedRange to newly inserted range
+        throw new Error("No change log exists.");
+      }
+
+      // search for existing entry
+      const idCol = usedRange.getColumn(0);
+      idCol.load("values");
+      await context.sync();
+
+      const values = idCol.values;
+      for (let i = 0; i < values.length; i++) {
+        if (values[i][0] === entryId) {
+          // Return the found cell as a range object
+          const foundCell = usedRange.getCell(i, 0); // Get the corresponding cell
+
+          foundCell.getEntireRow().select();
+
+          await context.sync();
+
+          return;
+        }
+      }
+
+      throw new Error("Entry not found.");
+    });
+  });
+
 const updateCardContainer = async (focus_first = false) =>
   tryCatch(async () => {
     const cardContainer = document.getElementById("cardContainer");
@@ -381,8 +422,12 @@ const updateCardContainer = async (focus_first = false) =>
         setSideBtnState(data.id, getCardState(data.id), sideBtn, true);
 
         sideBtn.onclick = () => {
-          if (window.sharedState.autoSave.enabled) return;
-          insertSingleCard(window.sharedState.capturedRanges.length - 1 - index);
+          if (window.sharedState.autoSave.enabled) {
+            if (getCardState(data.id) !== "saved") return;
+            goToChangeLog(data.id);
+          } else {
+            insertSingleCard(window.sharedState.capturedRanges.length - 1 - index);
+          }
         };
         cardInstance.appendChild(sideBtn);
 
@@ -1092,7 +1137,8 @@ function setSideBtnState(entryId, newState, buttonObj, forceUpdate = false) {
   if (buttonObj === undefined) buttonObj = document.getElementById(`${entryId}-sidebtn`);
 
   // otherwise set state
-  buttonObj.className = "card-insert" + (window.sharedState.autoSave.enabled ? "" : " clickable");
+  buttonObj.className =
+    "card-insert" + (window.sharedState.autoSave.enabled && newState !== "saved" ? "" : " clickable");
   setCardState(entryId, newState);
 
   switch (newState) {
