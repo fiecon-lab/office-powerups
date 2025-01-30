@@ -386,7 +386,8 @@ const goToChangeLog = async (entryId) =>
           // Return the found cell as a range object
           const foundCell = usedRange.getCell(i, 0); // Get the corresponding cell
 
-          foundCell.getEntireRow().select();
+          // Select first 10, not entire row; hopefully better performance
+          foundCell.getResizedRange(0, 10).select();
 
           await context.sync();
 
