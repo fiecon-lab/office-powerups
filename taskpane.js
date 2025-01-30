@@ -1324,6 +1324,7 @@ const applyFillColourIfEmpty = async (range, context) =>
     await context.sync();
 
     const n_cells = range.rowCount * range.columnCount;
+    if (n_cells > 1000) throw new Error("Cannot apply fill to more than 1000 cells at a time.");
 
     for (let row = 0; row < range.rowCount; row++) {
       for (let col = 0; col < range.columnCount; col++) {
