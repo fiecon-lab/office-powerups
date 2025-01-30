@@ -111,10 +111,7 @@ const setAutosaveEnabled = async (enabled) =>
     if (enabled) {
       // ENABLE
       // Immediately push all existing to change log
-      showPopup(
-        "🛈 Auto-save enabled, syncing to Change Log.",
-        false
-      );
+      showPopup("🛈 Auto-save enabled, syncing to Change Log.", false);
       window.sharedState.capturedRanges.forEach((range) => {
         autoSave.handleInput(range.id, range.description, updateStatusIndicator);
       });
@@ -1376,6 +1373,13 @@ const fillSelection = async () =>
 
 const applyQCFill = async (range, context) =>
   tryCatch(async () => {
+    range.load(["rowCount", "columnCount"]);
+    await context.sync();
+
+    const n_cells = range.rowCount * range.columnCount;
+
+    if (n_cells > 1000) throw new Error("Cannot apply fill to more than 1000 cells at a time.");
+
     // assign colour to range
     let [result, error] = await getFromLocalStorage("pwrups_fill_col");
     if (!error) range.format.fill.color = result;
