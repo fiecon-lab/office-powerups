@@ -132,7 +132,7 @@
     <div class="button-pane">
       <div>
         <div id="capture-btn-container" class="button-container outlined" style="padding:0; gap:0; overflow: hidden">
-          <img class="button-image clickable outlined" src="./assets/ac_icon_0.png" alt="Button Image"
+          <img id="capture-btn" class="button-image clickable outlined" src="./assets/ac_icon_0.png" alt="Button Image"
             style="border-radius: 0px;" onclick="captureAddress()" />
           <div id="dropdown-btn" class="button-label clickable outlined" style="width:100%; font-size:0.9rem"
             onclick="toggleCaptureDropdown()">
@@ -144,10 +144,10 @@
           </div>
         </div>
         <div id="captureDropdown" class="dropdown-content">
-          <a href="#" onclick="captureAddress()">Capture range</a>
-          <a href="#" onclick="captureAddress({fillTarget:true})">Capture and fill</a>
-          <a href="#" onclick="fillSelection()">Fill only</a>
-          <a href="#" onclick="showPopup('🛈 Coming soon: add custom non-range entries e.g. VBA edits', false)">Capture
+          <a href="#" id="dd-capture onclick="captureAddress()">Capture range</a>
+          <a href="#" id="dd-capturefill onclick="captureAddress({fillTarget:true})">Capture and fill</a>
+          <a href="#" id="dd-fill" onclick="fillSelection()">Fill only</a>
+          <a href="#" id="dd-custom" onclick="showPopup('🛈 Coming soon: add custom non-range entries e.g. VBA edits', false)">Capture
             custom</a>
         </div>
       </div>
